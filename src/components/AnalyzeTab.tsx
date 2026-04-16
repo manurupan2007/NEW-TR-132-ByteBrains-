@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Upload, Image as ImageIcon, X, AlertCircle, FileText, Loader2, Sparkles, BrainCircuit, Activity } from 'lucide-react';
+import { Search, Upload, Image as ImageIcon, X, AlertCircle, Loader2, Sparkles, BrainCircuit, Activity } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
-import { analyzePost } from '../lib/gemini';
+import { analyzePost, isApiKeyConfigured } from '../lib/gemini';
 import { AnalysisResult } from '../types';
-import ReportModal from './ReportModal';
+import { toast } from 'sonner';
 
 import { RESOURCES } from '../lib/resources';
 
@@ -22,7 +22,7 @@ export default function AnalyzeTab({ onAnalysisComplete }: AnalyzeTabProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isReportOpen, setIsReportOpen] = useState(false);
+
 
   const getRecommendedResource = (risk: string) => {
     if (risk === 'Crisis') return RESOURCES.find(r => r.category === 'Crisis');
@@ -47,11 +47,35 @@ export default function AnalyzeTab({ onAnalysisComplete }: AnalyzeTabProps) {
     try {
       const analysis = await analyzePost(currentText, currentImage ? currentImage.split(',')[1] : undefined);
       setResult(analysis);
+      
+      if (analysis.riskLevel === 'Crisis') {
+        toast.error('Mission Critical Alert', {
+          description: 'SEVERE DISTRESS SIGNAL DETECTED. Immediate intervention protocols recommended.',
+          duration: 6000,
+        });
+      } else if (analysis.riskLevel === 'Moderate') {
+        toast.warning('Elevated Risk Level', {
+          description: 'Moderate distress signals found. Support resources recommended.',
+          duration: 5000,
+        });
+      } else if (analysis.riskLevel === 'Mild') {
+        toast.info('Minor Signal Anomaly', {
+          description: 'Mild stress or anxiety indicators present in transmission.',
+          duration: 4000,
+        });
+      } else {
+        toast.success('Signal Clear', {
+          description: 'No significant distress markers detected in transmission.',
+          duration: 3000,
+        });
+      }
+
       if (onAnalysisComplete) {
         onAnalysisComplete(analysis);
       }
-    } catch (err) {
-      setError('Signal analysis failed. Please retry.');
+    } catch (err: any) {
+      const message = err?.message || 'Signal analysis failed. Please retry.';
+      setError(message);
       console.error(err);
     } finally {
       setIsAnalyzing(false);
@@ -65,7 +89,7 @@ export default function AnalyzeTab({ onAnalysisComplete }: AnalyzeTabProps) {
     
     timeoutRef.current = setTimeout(() => {
       handleAnalysis(text, image);
-    }, 2000); // 2-second debounce
+    }, 3000); // 3-second debounce
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -271,6 +295,30 @@ export default function AnalyzeTab({ onAnalysisComplete }: AnalyzeTabProps) {
                       </p>
                     </div>
 
+                    {(result.riskLevel === 'Mild' || result.riskLevel === 'Moderate') && (
+                      <div className="space-y-3 pt-4 border-t border-zinc-900">
+                        <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest">Self-Care Suggestions</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center gap-3 hover:bg-zinc-800/80 transition-colors cursor-pointer">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">🧘‍♂️</div>
+                            <span className="text-[10px] font-bold text-zinc-300">Guided Meditation</span>
+                          </div>
+                          <div className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center gap-3 hover:bg-zinc-800/80 transition-colors cursor-pointer">
+                            <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">🌳</div>
+                            <span className="text-[10px] font-bold text-zinc-300">Nature Exposure</span>
+                          </div>
+                          <div className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center gap-3 hover:bg-zinc-800/80 transition-colors cursor-pointer">
+                            <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">📓</div>
+                            <span className="text-[10px] font-bold text-zinc-300">Mood Journaling</span>
+                          </div>
+                          <div className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center gap-3 hover:bg-zinc-800/80 transition-colors cursor-pointer">
+                            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">🎧</div>
+                            <span className="text-[10px] font-bold text-zinc-300">Binaural Beats</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {getRecommendedResource(result.riskLevel) && (
                       <div className="space-y-3 pt-4 border-t border-zinc-900">
                         <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest">Recommended Intervention</p>
@@ -292,13 +340,7 @@ export default function AnalyzeTab({ onAnalysisComplete }: AnalyzeTabProps) {
                       </div>
                     )}
 
-                    <Button 
-                      className="w-full bg-white text-black hover:bg-zinc-200 font-bold tracking-tight"
-                      onClick={() => setIsReportOpen(true)}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Generate Clinical Report
-                    </Button>
+
                   </CardContent>
                 </Card>
               </motion.div>
@@ -318,11 +360,7 @@ export default function AnalyzeTab({ onAnalysisComplete }: AnalyzeTabProps) {
         </div>
       </div>
 
-      <ReportModal 
-        isOpen={isReportOpen} 
-        onOpenChange={setIsReportOpen} 
-        result={result}
-      />
+
     </div>
   );
 }

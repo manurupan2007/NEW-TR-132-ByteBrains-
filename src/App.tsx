@@ -6,6 +6,7 @@ import SummaryTab from './components/SummaryTab';
 import AnalyzeTab from './components/AnalyzeTab';
 import DashboardTab from './components/DashboardTab';
 import ResourcesTab from './components/ResourcesTab';
+import IntegrationTab from './components/IntegrationTab';
 import { AnalysisResult } from './types';
 
 export default function App() {
@@ -60,6 +61,10 @@ export default function App() {
                 <HeartPulse className="w-4 h-4" />
                 Resources
               </TabsTrigger>
+              <TabsTrigger value="integration" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Integrations
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -79,7 +84,7 @@ export default function App() {
       <main className="flex-1 overflow-y-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsContent value="summary" className="m-0 focus-visible:ring-0">
-            <SummaryTab />
+            <SummaryTab onStart={() => setActiveTab('analyze')} />
           </TabsContent>
           <TabsContent value="analyze" className="m-0 focus-visible:ring-0">
             <AnalyzeTab onAnalysisComplete={handleNewAnalysis} />
@@ -89,6 +94,9 @@ export default function App() {
           </TabsContent>
           <TabsContent value="resources" className="m-0 focus-visible:ring-0">
             <ResourcesTab />
+          </TabsContent>
+          <TabsContent value="integration" className="m-0 focus-visible:ring-0">
+            <IntegrationTab />
           </TabsContent>
         </Tabs>
       </main>

@@ -3,7 +3,9 @@ import { motion } from 'framer-motion';
 import { Target, ShieldAlert, Cpu, Activity } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 
-export default function SummaryTab() {
+import { Button } from '../components/ui/button';
+
+export default function SummaryTab({ onStart }: { onStart?: () => void }) {
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-4 md:p-8">
       <motion.div 
@@ -36,6 +38,19 @@ export default function SummaryTab() {
         <div className="flex flex-col items-center gap-1">
           <p className="text-zinc-500 font-mono text-[10px] tracking-[0.2em] uppercase">Assigned Team</p>
           <p className="text-orange-500 font-bold text-lg font-mono tracking-widest uppercase">Byte Brains</p>
+        </div>
+
+        <div className="pt-6 pb-2">
+          <Button 
+            onClick={onStart}
+            size="lg"
+            className="group relative overflow-hidden bg-orange-600 hover:bg-orange-500 text-white font-bold tracking-widest uppercase font-mono px-12 py-6 rounded-full shadow-[0_0_40px_-10px_rgba(234,88,12,0.5)] transition-all hover:shadow-[0_0_60px_-15px_rgba(234,88,12,0.8)] hover:scale-105"
+          >
+            <span className="relative z-10 flex items-center gap-3">
+              <Activity className="w-5 h-5 group-hover:animate-pulse" />
+              START ANALYSIS
+            </span>
+          </Button>
         </div>
       </motion.div>
 
