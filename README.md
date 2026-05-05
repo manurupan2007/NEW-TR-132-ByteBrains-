@@ -1,4 +1,10 @@
 
+
+##https://new-tr-132-byte-brains.vercel.app/
+
+
+
+
 ## 📖 Overview
 
 **Sentinel AI** is a comprehensive, privacy-preserving mental health crisis signal detection system. It actively monitors textual input (from social platforms like Discord) to identify and triage distress signals efficiently without relying on sluggish, insecure third-party APIs. 
